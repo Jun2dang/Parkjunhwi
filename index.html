@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>식품 유통 & 품질 조회</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f9f9f9;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 700px;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      margin: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    .step, .quality {
+      margin-top: 20px;
+      border-left: 4px solid #ccc;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .step::before {
+      content: "📦";
+      position: absolute;
+      left: -25px;
+      top: 0;
+    }
+
+    .step-title {
+      font-weight: bold;
+    }
+
+    .step-date {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+
+    .quality-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 30px;
+      color: #2c3e50;
+    }
+
+    .status-ok {
+      color: green;
+      font-weight: bold;
+    }
+
+    .status-warn {
+      color: orange;
+      font-weight: bold;
+    }
+
+    .status-bad {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🔍 식품 유통 & 품질 조회</h2>
+  <input type="text" id="productCode" placeholder="식품 코드 또는 QR 값을 입력하세요" />
+  <button onclick="lookup()">조회하기</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+  const foodData = {
+    "F12345": {
+      name: "유기농 마늘",
+      route: [
+        { title: "수확", location: "경북 의성", date: "2025-04-10" },
+        { title: "냉장창고", location: "대구 센터", date: "2025-04-11" },
+        { title: "배송 준비", location: "광주 물류센터", date: "2025-04-12" },
+        { title: "배송 완료", location: "서울 성북구", date: "2025-04-13" }
+      ],
+      quality: {
+        averageTemp: 3.5,
+        maxTemp: 6.2,
+        freshness: 92,
+        expiration: "2025-04-25"
+      }
+    },
+    "QR98765": {
+      name: "신선한 딸기",
+      route: [
+        { title: "수확", location: "논산 딸기농장", date: "2025-04-09" },
+        { title: "예냉 및 포장", location: "충남 물류창고", date: "2025-04-10" },
+        { title: "배송 중", location: "서울행 차량", date: "2025-04-11" }
+      ],
+      quality: {
+        averageTemp: 2.1,
+        maxTemp: 4.5,
+        freshness: 98,
+        expiration: "2025-04-20"
+      }
+    }
+  };
+
+  function lookup() {
+    const code = document.getElementById("productCode").value.trim();
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = "";
+
+    if (!code) {
+      resultDiv.innerHTML = "<div class='error'>식품 코드를 입력해주세요.</div>";
+      return;
+    }
+
+    const data = foodData[code];
+    if (!data) {
+      resultDiv.innerHTML = "<div class='error'>유효하지 않은 코드입니다.</div>";
+      return;
+    }
+
+    let output = `<h3>📦 ${data.name}의 유통 경로</h3>`;
+    data.route.forEach(step => {
+      output += `
+        <div class="step">
+          <div class="step-title">${step.title}</div>
+          <div>${step.location}</div>
+          <div class="step-date">${step.date}</div>
+        </div>
+      `;
+    });
+
+    const q = data.quality;
+    const statusClass = q.maxTemp > 5 ? "status-warn" : "status-ok";
+    const freshnessStatus = q.freshness < 80 ? "status-bad" : (q.freshness < 90 ? "status-warn" : "status-ok");
+
+    output += `
+      <div class="quality">
+        <div class="quality-title">🌡️ 품질 정보</div>
+        <p><strong>평균 적재 온도:</strong> ${q.averageTemp}°C</p>
+        <p><strong>최고 적재 온도:</strong> <span class="${statusClass}">${q.maxTemp}°C</span></p>
+        <p><strong>신선도 점수:</strong> <span class="${freshnessStatus}">${q.freshness}/100</span></p>
+        <p><strong>유통기한:</strong> ${q.expiration}</p>
+      </div>
+    `;
+
+    resultDiv.innerHTML = output;
+  }
+</script>
+
+</body>
+</html>
